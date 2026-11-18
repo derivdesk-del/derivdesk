@@ -1,0 +1,292 @@
+{
+  "entities": {
+    "UserProfilePublic": {
+      "title": "UserProfilePublic",
+      "description": "Non-PII public profile preferences for a signed-in user.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "photoURL": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "preferredModel": {
+          "type": "string",
+          "enum": ["gemini-4-hydrogen", "gemini-3.1-flash-lite"],
+          "maxLength": 40
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "displayName", "preferredModel", "createdAt", "updatedAt"]
+    },
+    "UserPrivateInfo": {
+      "title": "UserPrivateInfo",
+      "description": "Isolated PII document containing user email, strictly owner-readable only.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 160
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "email", "updatedAt"]
+    },
+    "SavedStrategy": {
+      "title": "SavedStrategy",
+      "description": "Persisted Bot Builder or AI-generated quantitative trading strategy.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 32
+        },
+        "contractType": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 24
+        },
+        "stake": {
+          "type": "number"
+        },
+        "takeProfit": {
+          "type": "number"
+        },
+        "stopLoss": {
+          "type": "number"
+        },
+        "config": {
+          "type": "object"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["ownerId", "name", "symbol", "contractType", "stake", "takeProfit", "stopLoss", "config", "createdAt", "updatedAt"]
+    },
+    "ChatSession": {
+      "title": "ChatSession",
+      "description": "Multi-turn Gemini Quant Assistant thread metadata.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "rolePreset": {
+          "type": "string",
+          "enum": ["architect", "dtrader", "scanner", "fast"],
+          "maxLength": 24
+        },
+        "model": {
+          "type": "string",
+          "enum": ["gemini-4-hydrogen", "gemini-3.1-flash-lite"],
+          "maxLength": 40
+        },
+        "activeSymbol": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 32
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["ownerId", "title", "rolePreset", "model", "activeSymbol", "createdAt", "updatedAt"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Single message inside a multi-turn Gemini Quant Assistant session.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "chatId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["user", "assistant"],
+          "maxLength": 16
+        },
+        "content": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 12000
+        },
+        "modelUsed": {
+          "type": "string",
+          "maxLength": 48
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["ownerId", "chatId", "role", "content", "modelUsed", "createdAt"]
+    },
+    "ScannerSessionLog": {
+      "title": "ScannerSessionLog",
+      "description": "Persisted 1000-tick AI Scanner & DTrader sniper snapshot log.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 32
+        },
+        "contractType": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 24
+        },
+        "barrier": {
+          "type": "number"
+        },
+        "sampleSize": {
+          "type": "number"
+        },
+        "winRatePct": {
+          "type": "number"
+        },
+        "evPct": {
+          "type": "number"
+        },
+        "confidence": {
+          "type": "number"
+        },
+        "netPnl": {
+          "type": "number"
+        },
+        "wins": {
+          "type": "number"
+        },
+        "losses": {
+          "type": "number"
+        },
+        "rationale": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "symbol",
+        "contractType",
+        "barrier",
+        "sampleSize",
+        "winRatePct",
+        "evPct",
+        "confidence",
+        "netPnl",
+        "wins",
+        "losses",
+        "rationale",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfilePublic" },
+      "description": "Public non-PII profile settings owned by userId."
+    },
+    "/users/{userId}/private/info": {
+      "schema": { "$ref": "#/entities/UserPrivateInfo" },
+      "description": "Isolated PII email document strictly owned by userId."
+    },
+    "/users/{userId}/strategies/{strategyId}": {
+      "schema": { "$ref": "#/entities/SavedStrategy" },
+      "description": "Saved Bot Builder & AI quantitative strategies owned by userId."
+    },
+    "/users/{userId}/chats/{chatId}": {
+      "schema": { "$ref": "#/entities/ChatSession" },
+      "description": "Multi-turn Gemini Quant Assistant threads owned by userId."
+    },
+    "/users/{userId}/chats/{chatId}/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/ChatMessage" },
+      "description": "Messages belonging to a specific userId chat session."
+    },
+    "/users/{userId}/scannerLogs/{logId}": {
+      "schema": { "$ref": "#/entities/ScannerSessionLog" },
+      "description": "Persisted 1000-tick AI Scanner & DTrader sniper performance logs."
+    }
+  }
+}

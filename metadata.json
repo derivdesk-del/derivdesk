@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix Lumina Field",
+  "description": "Collaborative live particle art studio with real-time WebSocket physics, shared force nodes, and radial symmetry.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

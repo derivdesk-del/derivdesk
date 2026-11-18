@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix Remix DerivDesk Options Terminal",
+  "description": "Secure full-stack Deriv Options trading terminal with backend Personal API Token OTP authentication, public market data streaming, and demo-first execution safeguards.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

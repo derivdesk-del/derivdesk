@@ -1,0 +1,258 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidUserPublic(data, userId) {
+      return data.keys().hasAll(['uid', 'displayName', 'preferredModel', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'displayName', 'photoURL', 'preferredModel', 'createdAt', 'updatedAt'])
+        && data.uid is string
+        && data.uid == request.auth.uid
+        && data.uid == userId
+        && data.uid.size() >= 1 && data.uid.size() <= 128
+        && data.uid.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.displayName is string
+        && data.displayName.size() >= 1 && data.displayName.size() <= 80
+        && (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 500))
+        && data.preferredModel is string
+        && data.preferredModel in ['gemini-4-hydrogen', 'gemini-3.1-flash-lite']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidUserPrivate(data, userId) {
+      return data.keys().hasAll(['uid', 'email', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'email', 'updatedAt'])
+        && data.uid is string
+        && data.uid == request.auth.uid
+        && data.uid == userId
+        && data.uid.size() >= 1 && data.uid.size() <= 128
+        && data.uid.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.email is string
+        && data.email.size() >= 3 && data.email.size() <= 160
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidStrategy(data, userId) {
+      return data.keys().hasAll(['ownerId', 'name', 'symbol', 'contractType', 'stake', 'takeProfit', 'stopLoss', 'config', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['ownerId', 'name', 'description', 'symbol', 'contractType', 'stake', 'takeProfit', 'stopLoss', 'config', 'createdAt', 'updatedAt'])
+        && data.ownerId is string
+        && data.ownerId == request.auth.uid
+        && data.ownerId == userId
+        && data.ownerId.size() >= 1 && data.ownerId.size() <= 128
+        && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.name is string
+        && data.name.size() >= 1 && data.name.size() <= 120
+        && (!('description' in data) || (data.description is string && data.description.size() <= 500))
+        && data.symbol is string
+        && data.symbol.size() >= 2 && data.symbol.size() <= 32
+        && data.contractType is string
+        && data.contractType.size() >= 2 && data.contractType.size() <= 24
+        && data.stake is number && data.stake >= 0.35 && data.stake <= 100000
+        && data.takeProfit is number && data.takeProfit >= 0 && data.takeProfit <= 1000000
+        && data.stopLoss is number && data.stopLoss >= 0 && data.stopLoss <= 1000000
+        && data.config is map
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidChatSession(data, userId) {
+      return data.keys().hasAll(['ownerId', 'title', 'rolePreset', 'model', 'activeSymbol', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['ownerId', 'title', 'rolePreset', 'model', 'activeSymbol', 'createdAt', 'updatedAt'])
+        && data.ownerId is string
+        && data.ownerId == request.auth.uid
+        && data.ownerId == userId
+        && data.ownerId.size() >= 1 && data.ownerId.size() <= 128
+        && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.title is string
+        && data.title.size() >= 1 && data.title.size() <= 100
+        && data.rolePreset is string
+        && data.rolePreset in ['architect', 'dtrader', 'scanner', 'fast']
+        && data.model is string
+        && data.model in ['gemini-4-hydrogen', 'gemini-3.1-flash-lite']
+        && data.activeSymbol is string
+        && data.activeSymbol.size() >= 2 && data.activeSymbol.size() <= 32
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidChatMessage(data, userId, chatId) {
+      return data.keys().hasAll(['ownerId', 'chatId', 'role', 'content', 'modelUsed', 'createdAt'])
+        && data.keys().hasOnly(['ownerId', 'chatId', 'role', 'content', 'modelUsed', 'createdAt'])
+        && data.ownerId is string
+        && data.ownerId == request.auth.uid
+        && data.ownerId == userId
+        && data.ownerId.size() >= 1 && data.ownerId.size() <= 128
+        && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.chatId is string
+        && data.chatId == chatId
+        && data.chatId.size() >= 1 && data.chatId.size() <= 128
+        && data.chatId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.role is string
+        && data.role in ['user', 'assistant']
+        && data.content is string
+        && data.content.size() >= 1 && data.content.size() <= 12000
+        && data.modelUsed is string
+        && data.modelUsed.size() >= 1 && data.modelUsed.size() <= 48
+        && data.createdAt is timestamp;
+    }
+
+    function isValidScannerLog(data, userId) {
+      return data.keys().hasAll(['ownerId', 'symbol', 'contractType', 'barrier', 'sampleSize', 'winRatePct', 'evPct', 'confidence', 'netPnl', 'wins', 'losses', 'rationale', 'createdAt'])
+        && data.keys().hasOnly(['ownerId', 'symbol', 'contractType', 'barrier', 'sampleSize', 'winRatePct', 'evPct', 'confidence', 'netPnl', 'wins', 'losses', 'rationale', 'createdAt'])
+        && data.ownerId is string
+        && data.ownerId == request.auth.uid
+        && data.ownerId == userId
+        && data.ownerId.size() >= 1 && data.ownerId.size() <= 128
+        && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.symbol is string && data.symbol.size() >= 2 && data.symbol.size() <= 32
+        && data.contractType is string && data.contractType.size() >= 2 && data.contractType.size() <= 24
+        && data.barrier is number
+        && data.sampleSize is number && data.sampleSize >= 1 && data.sampleSize <= 5000
+        && data.winRatePct is number && data.winRatePct >= 0 && data.winRatePct <= 100
+        && data.evPct is number && data.evPct >= -100 && data.evPct <= 1000
+        && data.confidence is number && data.confidence >= 0 && data.confidence <= 100
+        && data.netPnl is number
+        && data.wins is number && data.wins >= 0
+        && data.losses is number && data.losses >= 0
+        && data.rationale is string && data.rationale.size() <= 500
+        && data.createdAt is timestamp;
+    }
+
+    // Boot-time connectivity check document
+    match /test/connection {
+      allow get: if true;
+      allow list, write: if false;
+    }
+
+    // User Public Profile (Non-PII)
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow create: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserPublic(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserPublic(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'preferredModel', 'updatedAt']);
+      allow delete: if false;
+
+      // Isolated PII document
+      match /private/info {
+        allow get: if isValidId(userId) && isOwner(userId);
+        allow create: if isValidId(userId)
+          && isOwner(userId)
+          && isValidUserPrivate(incoming(), userId)
+          && incoming().updatedAt == request.time;
+        allow update: if isValidId(userId)
+          && isOwner(userId)
+          && isValidUserPrivate(incoming(), userId)
+          && incoming().uid == existing().uid
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['email', 'updatedAt']);
+        allow delete: if false;
+      }
+
+      // Saved Quantitative Bot Strategies
+      match /strategies/{strategyId} {
+        allow get: if isValidId(userId) && isValidId(strategyId) && isOwner(userId) && existing().ownerId == request.auth.uid;
+        allow list: if isValidId(userId) && isOwner(userId) && resource.data.ownerId == request.auth.uid;
+        allow create: if isValidId(userId)
+          && isValidId(strategyId)
+          && isOwner(userId)
+          && isValidStrategy(incoming(), userId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+        allow update: if isValidId(userId)
+          && isValidId(strategyId)
+          && isOwner(userId)
+          && isValidStrategy(incoming(), userId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'description', 'symbol', 'contractType', 'stake', 'takeProfit', 'stopLoss', 'config', 'updatedAt']);
+        allow delete: if isValidId(userId) && isValidId(strategyId) && isOwner(userId) && existing().ownerId == request.auth.uid;
+      }
+
+      // Multi-Turn Gemini Chat Sessions
+      match /chats/{chatId} {
+        allow get: if isValidId(userId) && isValidId(chatId) && isOwner(userId) && existing().ownerId == request.auth.uid;
+        allow list: if isValidId(userId) && isOwner(userId) && resource.data.ownerId == request.auth.uid;
+        allow create: if isValidId(userId)
+          && isValidId(chatId)
+          && isOwner(userId)
+          && isValidChatSession(incoming(), userId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+        allow update: if isValidId(userId)
+          && isValidId(chatId)
+          && isOwner(userId)
+          && isValidChatSession(incoming(), userId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'rolePreset', 'model', 'activeSymbol', 'updatedAt']);
+        allow delete: if isValidId(userId) && isValidId(chatId) && isOwner(userId) && existing().ownerId == request.auth.uid;
+
+        // Subcollection messages enforcing Master Gate lookup on parent chat doc
+        match /messages/{messageId} {
+          allow get: if isValidId(userId) && isValidId(chatId) && isValidId(messageId)
+            && isOwner(userId)
+            && get(/databases/$(database)/documents/users/$(userId)/chats/$(chatId)).data.ownerId == request.auth.uid;
+          allow list: if isValidId(userId) && isOwner(userId) && resource.data.ownerId == request.auth.uid;
+          allow create: if isValidId(userId) && isValidId(chatId) && isValidId(messageId)
+            && isOwner(userId)
+            && isValidChatMessage(incoming(), userId, chatId)
+            && incoming().createdAt == request.time
+            && get(/databases/$(database)/documents/users/$(userId)/chats/$(chatId)).data.ownerId == request.auth.uid;
+          allow update: if false;
+          allow delete: if isValidId(userId) && isValidId(chatId) && isValidId(messageId)
+            && isOwner(userId)
+            && get(/databases/$(database)/documents/users/$(userId)/chats/$(chatId)).data.ownerId == request.auth.uid;
+        }
+      }
+
+      // 1000-Tick Scanner & DTrader Execution Logs
+      match /scannerLogs/{logId} {
+        allow get: if isValidId(userId) && isValidId(logId) && isOwner(userId) && existing().ownerId == request.auth.uid;
+        allow list: if isValidId(userId) && isOwner(userId) && resource.data.ownerId == request.auth.uid;
+        allow create: if isValidId(userId)
+          && isValidId(logId)
+          && isOwner(userId)
+          && isValidScannerLog(incoming(), userId)
+          && incoming().createdAt == request.time;
+        allow update: if false;
+        allow delete: if isValidId(userId) && isValidId(logId) && isOwner(userId) && existing().ownerId == request.auth.uid;
+      }
+    }
+  }
+}
